@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { publisher, subscriber } from "./redis-client";
-
+import client from "@repo/db/client";
 
 
 
@@ -36,6 +36,8 @@ subscriber.subscribe("stream-data", (err, channel) => {
 
 subscriber.on("message", (channel, message) => {
   console.log("Received from Redis:", message);
+
+  
 });
 
 

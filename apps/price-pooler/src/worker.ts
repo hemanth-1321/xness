@@ -2,8 +2,8 @@ import client from "@repo/db/client";
 import { Trade } from ".";
 import { subscriber } from "./redis-client";
 
-const BATCH_SIZE = 1000;       // flush if buffer reaches 100 trades
-const BATCH_DELAY = 3000;     // flush if 3 seconds pass
+const BATCH_SIZE = 1000;       
+const BATCH_DELAY = 3000;     
 
 let tradeBuffer: Trade[] = [];
 let flushTimeout: NodeJS.Timeout | null = null;

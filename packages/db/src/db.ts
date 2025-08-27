@@ -69,4 +69,11 @@
             }
         }
 
-        Connection()
+(async () => {
+  try {
+    await Connection();
+    console.log("✅ DB setup complete");
+  } catch (err) {
+    console.error("❌ Error setting up DB:", err);
+  }
+})();

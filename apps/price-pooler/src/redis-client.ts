@@ -9,7 +9,5 @@ export const subscriber = new Redis(
     {
         host: "127.0.0.1",
          port: 32768
-
-
     });
 subscriber.on("connect", () => console.log("Subscriber connected"));

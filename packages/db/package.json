@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "seed":"pnpm build && node dist/db.js"
   },
   "keywords": [],
   "author": "",

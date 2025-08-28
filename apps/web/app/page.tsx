@@ -1,7 +1,7 @@
 import { InstrumentSidebar } from '@/components/instrumentSideBar'
 import { OrderPanel } from '@/components/OrderPannel'
 import { PositionsTable } from '@/components/positionsTable'
-import { TradingChart } from '@/components/tradiingChart'
+import TradingChart from '@/components/tradingChart'
 import { TradingHeader } from '@/components/tradingHeader'
 import React from 'react'
  const page = () => {
@@ -15,7 +15,7 @@ import React from 'react'
         <div className="flex-1 flex flex-col">
           <div className="flex flex-1">
             <div className="flex-1 p-4">
-              <TradingChart />
+                 <TradingChart />
             </div>
             <OrderPanel />
           </div>

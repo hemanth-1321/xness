@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev":"tsc --b && node dist/index.js",
+    "dev": "tsc --b && node dist/index.js",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
   },
@@ -13,9 +13,12 @@
   "license": "ISC",
   "packageManager": "pnpm@10.4.1",
   "dependencies": {
-    "@types/express": "^5.0.3",
-    "express": "^5.1.0",
     "@repo/db": "workspace:*",
-    "@repo/redis": "workspace:*"
+    "@repo/redis": "workspace:*",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
   }
 }

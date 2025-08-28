@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { publisher, subscriber } from "./redis-client";
+import { publisher } from"@repo/redis/redis-client"
 
 
 const binanceWS =
@@ -19,9 +19,6 @@ export interface Trade {
     T: string;
   };
 }
-
-
-
 /**
  * Producer:push trades to queue
  */
@@ -34,6 +31,9 @@ ws.on("message", async (msg) => {
   try {
     const data = JSON.parse(msg.toString());
     if (data.stream && data.data) {
+      await publisher.publish("trade-channel",JSON.stringify({
+          price: data.data.p,
+      }))
       await publisher.rpush("trade-queue", JSON.stringify(data));
       console.log(`Queued trade: ${data.data.s} @ ${data.data.p}`);
     }
@@ -43,10 +43,4 @@ ws.on("message", async (msg) => {
 });
 
 ws.on("error", (err) => console.error("WebSocket error:", err));
-
-
-
-/**
- * consumer: reads from queue and inserts intp db 
- */
 

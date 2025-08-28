@@ -1,11 +1,24 @@
 import client from "@repo/db/client";
-import { Trade } from ".";
-import { subscriber } from "./redis-client";
+import { subscriber } from "@repo/redis/redis-client";
 
-const BATCH_SIZE = 1000;       
-const BATCH_DELAY = 3000;     
+const BATCH_SIZE = 1000;
+const BATCH_DELAY = 3000;
 
-let tradeBuffer: Trade[] = [];
+interface BinanceTrade {
+  e: string;   // event type
+  E: number;   // event time
+  s: string;   // symbol
+  t: number;   // trade ID
+  p: string;   // price
+  q: string;   // quantity
+}
+
+interface TradeWrapper {
+  stream?: string;
+  data: BinanceTrade;
+}
+
+let tradeBuffer: BinanceTrade[] = [];
 let flushTimeout: NodeJS.Timeout | null = null;
 
 async function flushTrades() {
@@ -14,15 +27,15 @@ async function flushTrades() {
   const values: any[] = [];
   const placeholders: string[] = [];
 
-  tradeBuffer.forEach((trade, index) => {
+  tradeBuffer.forEach((t, index) => {
     const i = index * 5;
     placeholders.push(`($${i + 1}, $${i + 2}, $${i + 3}, $${i + 4}, $${i + 5})`);
     values.push(
-      new Date(trade.data.E).toISOString(),
-      trade.data.s,
-      parseFloat(trade.data.p),
-      parseFloat(trade.data.q),
-      Number(trade.data.t)
+      new Date(t.E).toISOString(),
+      t.s,
+      parseFloat(t.p),
+      parseFloat(t.q),
+      Number(t.t)
     );
   });
 
@@ -33,9 +46,9 @@ async function flushTrades() {
 
   try {
     await client.query(queryText, values);
-    console.log(`Inserted ${tradeBuffer.length} trades in batch`);
+    console.log(`✅ Inserted ${tradeBuffer.length} trades in batch`);
   } catch (err) {
-    console.error("Batch insert error:", err);
+    console.error("❌ Batch insert error:", err);
   } finally {
     tradeBuffer = [];
     if (flushTimeout) {
@@ -52,20 +65,23 @@ async function consumeTrades() {
       if (!res) continue;
 
       const [, message] = res;
-      const trade: Trade = JSON.parse(message);
+      const raw = JSON.parse(message) as TradeWrapper | BinanceTrade;
 
-      tradeBuffer.push(trade);
-    //   console.log(`Buffered trade: ${trade.data.s} @ ${trade.data.p} qty ${trade.data.q}`);
-    //   console.log(`Current buffer size: ${tradeBuffer.length}`);
+      // Normalize: ensure we always get BinanceTrade shape
+      const trade: BinanceTrade = "data" in raw ? raw.data : raw;
 
-      // Flush if buffer reached batch size
+      if (trade?.E && trade?.s && trade?.p && trade?.q && trade?.t !== undefined) {
+        tradeBuffer.push(trade);
+      } else {
+        console.warn("⚠️ Skipped invalid trade:", raw);
+        continue;
+      }
+
       if (tradeBuffer.length >= BATCH_SIZE) {
         await flushTrades();
       } else if (!flushTimeout) {
-        // Otherwise, set a delay to flush
         flushTimeout = setTimeout(flushTrades, BATCH_DELAY);
       }
-
     } catch (err) {
       console.error("Error in consumeTrades:", err);
     }
@@ -75,10 +91,10 @@ async function consumeTrades() {
 (async () => {
   try {
     await client.connect();
-    console.log("✅ Connected to DB");
+    console.log("Connected to DB");
     consumeTrades();
   } catch (err) {
-    console.error("❌ DB connection error:", err);
+    console.error("DB connection error:", err);
     process.exit(1);
   }
 })();

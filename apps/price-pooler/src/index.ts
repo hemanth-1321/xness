@@ -1,46 +1,40 @@
+import dotenv from "dotenv"
+dotenv.config()
 import WebSocket from "ws";
-import { publisher } from"@repo/redis/redis-client"
+import { publisher } from "@repo/redis/redis-client"
+import { Trade } from "./types";
 
 
-const binanceWS =
-  "wss://stream.binance.com:9443/stream?streams=btcusdt@trade/ethusdt@trade/solusdt@trade";
+const binanceWS = process.env.BINANCE_API_KEY!
 
-const ws = new WebSocket(binanceWS);
-
-export interface Trade {
-  stream: string;
-  data: {
-    e: string;
-    E: number;
-    s: string;
-    t: number;
-    p: string;
-    q: string;
-    T: string;
-  };
-}
-/**
- * Producer:push trades to queue
- */
+const ws = new WebSocket(binanceWS)
 
 ws.on("open", () => {
-  console.log("Connected to Binance WebSocket");
-});
+  console.log("connected to binance websocket")
+})
+
+
 
 ws.on("message", async (msg) => {
   try {
-    const data = JSON.parse(msg.toString());
-    if (data.stream && data.data) {
-      await publisher.publish("trade-channel",JSON.stringify({
-          price: data.data.p,
-      }))
-      await publisher.rpush("trade-queue", JSON.stringify(data));
-      console.log(`Queued trade: ${data.data.s} @ ${data.data.p}`);
-    }
-  } catch (err) {
-    console.error("ws error", err);
-  }
-});
+    // console.log("raw msg", JSON.parse(msg.toString()));
+    const data: Trade = JSON.parse(msg.toString())
 
-ws.on("error", (err) => console.error("WebSocket error:", err));
+
+    if (data.stream && data.data) {
+      //publishes data 
+      await publisher.publish("live-trades", JSON.stringify(data))
+      console.log('data published',data)
+
+
+      // trades are queued to push into data base (timescale db)
+      await publisher.rpush("trade-queue", JSON.stringify(data))
+
+      // console.log('data queued', data.data.p)
+
+    }
+  } catch (error) {
+    console.error("error streaming binance api", error)
+  }
+})
 

@@ -1,100 +1,98 @@
-import client from "@repo/db/client";
-import { subscriber } from "@repo/redis/redis-client";
+  import client from "@repo/db/client";
+  import { subscriber } from "@repo/redis/redis-client";
+  import { Trade } from "./types";
 
-const BATCH_SIZE = 1000;
-const BATCH_DELAY = 3000;
+  const BATCH_SIZE = 1000;
+  const BATCH_DELAY = 3000;
+  const PRICE_MULTIPLIER = 1e8;
+  const VOLUME_MULTIPLIER = 1e6;
+  let flushTimeout: NodeJS.Timeout | null = null;
 
-interface BinanceTrade {
-  e: string;   // event type
-  E: number;   // event time
-  s: string;   // symbol
-  t: number;   // trade ID
-  p: string;   // price
-  q: string;   // quantity
-}
+  let tradeBuffer: Trade[] = [];
 
-interface TradeWrapper {
-  stream?: string;
-  data: BinanceTrade;
-}
-
-let tradeBuffer: BinanceTrade[] = [];
-let flushTimeout: NodeJS.Timeout | null = null;
-
-async function flushTrades() {
-  if (tradeBuffer.length === 0) return;
-
-  const values: any[] = [];
-  const placeholders: string[] = [];
-
-  tradeBuffer.forEach((t, index) => {
-    const i = index * 5;
-    placeholders.push(`($${i + 1}, $${i + 2}, $${i + 3}, $${i + 4}, $${i + 5})`);
-    values.push(
-      new Date(t.E).toISOString(),
-      t.s,
-      parseFloat(t.p),
-      parseFloat(t.q),
-      Number(t.t)
-    );
-  });
-
-  const queryText = `
-    INSERT INTO trades (time, symbol, price, volume, trade_id)
-    VALUES ${placeholders.join(",")}
-  `;
-
-  try {
-    await client.query(queryText, values);
-    console.log(`✅ Inserted ${tradeBuffer.length} trades in batch`);
-  } catch (err) {
-    console.error("❌ Batch insert error:", err);
-  } finally {
-    tradeBuffer = [];
-    if (flushTimeout) {
-      clearTimeout(flushTimeout);
-      flushTimeout = null;
-    }
-  }
-}
-
-async function consumeTrades() {
-  while (true) {
+  async function insertTrade() {
     try {
-      const res = await subscriber.brpop("trade-queue", 0);
-      if (!res) continue;
+      if (tradeBuffer.length == 0) return
+      const values: (string | number)[] = []
+      const placeholder: string[] = []
 
-      const [, message] = res;
-      const raw = JSON.parse(message) as TradeWrapper | BinanceTrade;
 
-      // Normalize: ensure we always get BinanceTrade shape
-      const trade: BinanceTrade = "data" in raw ? raw.data : raw;
-
-      if (trade?.E && trade?.s && trade?.p && trade?.q && trade?.t !== undefined) {
-        tradeBuffer.push(trade);
-      } else {
-        console.warn("⚠️ Skipped invalid trade:", raw);
-        continue;
+      tradeBuffer.forEach((t, index) => {
+        const i = index * 5
+        placeholder.push(`($${i + 1},$${i + 2},$${i + 3},$${i + 4},$${i + 5})`)
+        const priceInt = Math.round(parseFloat(t.data.p) * PRICE_MULTIPLIER)
+        const volumeInt = Math.round(parseFloat(t.data.q) * VOLUME_MULTIPLIER)
+        values.push(
+          new Date(t.data.E).toISOString(),
+          t.data.s,
+          priceInt,
+          volumeInt,
+          t.data.t
+        )
+      })
+      const query = `INSERT INTO trades(time,symbol,price,volume,trade_id)
+      VALUES ${placeholder.join(",")}
+      `
+      try {
+        await client.query(query, values)
+        console.log(`✅ Inserted ${tradeBuffer.length} trades in batch`);
+      } catch (error) {
+        console.error("batch insert error",error)
+      } finally {
+        tradeBuffer = []
+        if (flushTimeout) {
+          clearTimeout(flushTimeout)
+          flushTimeout = null
+        }
       }
 
-      if (tradeBuffer.length >= BATCH_SIZE) {
-        await flushTrades();
-      } else if (!flushTimeout) {
-        flushTimeout = setTimeout(flushTrades, BATCH_DELAY);
-      }
-    } catch (err) {
-      console.error("Error in consumeTrades:", err);
+
+    } catch (error) {
+      console.log("error inserting data", error);
+
     }
   }
-}
 
-(async () => {
-  try {
-    await client.connect();
-    console.log("Connected to DB");
-    consumeTrades();
-  } catch (err) {
-    console.error("DB connection error:", err);
-    process.exit(1);
+
+  async function consumeTrade() {
+    while (true) {
+      try {
+        const res = await subscriber.brpop("trade-queue", 0);
+        if (!res) continue;
+
+        const trade = res[1];
+        let data: Trade;
+        try {
+          data = JSON.parse(trade);
+        } catch (err) {
+          console.warn("Invalid JSON:", trade);
+          continue;
+        }
+
+        if (data.data?.E && data.data?.p && data.data?.q && data.data?.t) {
+          tradeBuffer.push(data);
+        } else {
+          console.warn("Skipped invalid trade:", data);
+          continue;
+        }
+
+        if (tradeBuffer.length === BATCH_SIZE) {
+          await insertTrade();
+        }
+      } catch (error) {
+        console.error("Error in consumeTrade:", error);
+      }
+    }
   }
-})();
+
+
+  (async () => {
+    try {
+      await client.connect();
+      console.log("Connected to DB");
+      consumeTrade(); // Start consuming trades
+    } catch (error) {
+      console.error("DB connection error:", error);
+      process.exit(1);
+    }
+  })();

@@ -7,6 +7,7 @@ export interface TradingInstrument {
   changePercent: number;
   signal: 'buy' | 'sell' | 'neutral';
   volume?: number;
+  ask?: number;
 }
 
 export interface CandlestickData {

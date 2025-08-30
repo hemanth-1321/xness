@@ -4,10 +4,12 @@ import cors from "cors"
 import{createServer} from 'http'
 import WebSocket,{WebSocketServer} from "ws"
 import{subscriber}from '@repo/redis/redis-client'
-import { Trade } from "./types"
-
+import { Trade } from "./types/types"
+import userAuthRoutes from "./routes/UserRoute"
 const app = express()
 app.use(cors())
+app.use(express.json())
+
 const PORT = 8080
 
 const server =createServer(app)
@@ -48,7 +50,7 @@ app.get("/candles/:timeframe", async (req, res) => {
   }
 })
 
-
+app.use("/api/v1/user",userAuthRoutes)
 /**
  * Websocket handling
  */
@@ -139,19 +141,19 @@ async function setRedis() {
   
 }
 
-function procesTrades(trade: Trade) {
-  const symbol=trade.data.s
- const _price=trade.data.p
- const timestamp=trade.data.T
+// function procesTrades(trade: Trade) {
+//   const symbol=trade.data.s
+//  const _price=trade.data.p
+//  const timestamp=trade.data.T
 
- const price=parseInt(_price)
-
-
+//  const price=parseInt(_price)
 
 
 
 
-}
+
+
+// }
 
 
 (async () => {

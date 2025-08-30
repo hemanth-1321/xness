@@ -1,4 +1,6 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
+import { io, type Socket } from "socket.io-client";
 import {
   CandlestickSeries,
   createChart,
@@ -6,46 +8,40 @@ import {
   type IChartApi,
   type Time,
 } from "lightweight-charts";
-import { useEffect, useRef, useState } from "react";
-import { io, type Socket } from "socket.io-client";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select"; // adjust path to your ui folder
+const SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "SUIUSDT"];
+const TIMEFRAMES = ["1m", "5m", "10m", "30m", "1h", "1d"] as const;
+type TF = (typeof TIMEFRAMES)[number];
 
-type TF = "1m" | "5m" | "10m" | "30m" | "1h" | "1d";
+const TIMEFRAME_LABELS: Record<TF, string> = {
+  "1m": "1 min",
+  "5m": "5 min",
+  "10m": "10 min",
+  "30m": "30 min",
+  "1h": "1 hour",
+  "1d": "1 day",
+};
 
-const SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
+export default function TradingChart() {
+  const [symbol, setSymbol] = useState<string>(SYMBOLS[0] as string);
+  const [timeframe, setTimeframe] = useState<TF>("1m");
 
-export default function TradingChart({ timeframe = "1m" as TF }) {
-  const [symbol, setSymbol] = useState<string>(SYMBOLS[0] ?? "");
   const ref = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<any | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
+  // Initialize chart and socket
   useEffect(() => {
     if (!ref.current) return;
 
-    // --- Initialize chart ---
+    // --- Create chart ---
     const chart = createChart(ref.current, {
       width: ref.current.clientWidth,
       height: 400,
       layout: { background: { color: "#0b0e11" }, textColor: "#d1d4dc" },
-      grid: {
-        vertLines: { color: "#1f2a35" },
-        horzLines: { color: "#1f2a35" },
-      },
-      timeScale: {
-        rightOffset: 2,
-        fixLeftEdge: false,
-        fixRightEdge: false,
-        borderVisible: false,
-      },
+      grid: { vertLines: { color: "#1f2a35" }, horzLines: { color: "#1f2a35" } },
+      timeScale: { rightOffset: 2, borderVisible: false },
       crosshair: { mode: 0 },
     });
     chartRef.current = chart;
@@ -60,6 +56,7 @@ export default function TradingChart({ timeframe = "1m" as TF }) {
     });
     seriesRef.current = series;
 
+    // --- Socket.IO ---
     const socket = io("http://localhost:8080");
     socketRef.current = socket;
 
@@ -89,24 +86,7 @@ export default function TradingChart({ timeframe = "1m" as TF }) {
 
     loadCandles();
 
-    // --- Candle updates ---
-    const candleListener = (candles: any[]) => {
-      const formatted: CandlestickData[] = candles.map((c) => ({
-        time: Math.floor(new Date(c.bucket).getTime() / 1000) as Time,
-        open: Number(c.open),
-        high: Number(c.high),
-        low: Number(c.low),
-        close: Number(c.close),
-      }));
-      const last = seriesRef.current?.data().slice(-1)[0];
-      const newest = formatted[formatted.length - 1];
-      if (last?.time === newest?.time) seriesRef.current.update(newest);
-      else seriesRef.current.update(newest);
-    };
-
-    socket.on(`candles-update-${timeframe}-${symbol}`, candleListener);
-
-    // --- Live trades ---
+    // Subscribe to live trades
     socket.emit("subscribe-trades", { symbol });
     socket.on("live-trade", (trade) => {
       const price = parseFloat(trade.data.p);
@@ -124,8 +104,7 @@ export default function TradingChart({ timeframe = "1m" as TF }) {
       });
     });
 
-    const onResize = () =>
-      chart.applyOptions({ width: ref.current!.clientWidth });
+    const onResize = () => chart.applyOptions({ width: ref.current!.clientWidth });
     window.addEventListener("resize", onResize);
 
     return () => {
@@ -136,20 +115,37 @@ export default function TradingChart({ timeframe = "1m" as TF }) {
   }, [symbol, timeframe]);
 
   return (
-    <div>
-      <Select value={symbol} onValueChange={(val) => setSymbol(val)}>
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="Select Symbol" />
-        </SelectTrigger>
-        <SelectContent>
+    <div className="space-y-2">
+      <div className="flex items-center gap-4">
+        {/* Symbol selector */}
+        <select
+          className="border px-2 py-1 rounded bg-black text-white"
+          value={symbol}
+          onChange={(e) => setSymbol(e.target.value)}
+        >
           {SYMBOLS.map((s) => (
-            <SelectItem key={s} value={s}>
+            <option key={s} value={s}>
               {s}
-            </SelectItem>
+            </option>
           ))}
-        </SelectContent>
-      </Select>
-      <div ref={ref} style={{ width: "100%", height: 400, marginTop: 8 }} />
+        </select>
+
+        {/* Timeframe selector */}
+        <select
+          className="border px-2 py-1 rounded bg-black text-white"
+          value={timeframe}
+          onChange={(e) => setTimeframe(e.target.value as TF)}
+        >
+          {TIMEFRAMES.map((tf) => (
+            <option key={tf} value={tf}>
+              {TIMEFRAME_LABELS[tf]}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Chart container */}
+      <div ref={ref} style={{ width: "100%", height: 400 }} />
     </div>
   );
 }

@@ -4,20 +4,7 @@ import cors from "cors"
 import{createServer} from 'http'
 import WebSocket,{WebSocketServer} from "ws"
 import{subscriber}from '@repo/redis/redis-client'
-
-export interface Trade {
-    stream: string;
-    data: {
-        e: string;
-        E: number;
-        s: string;
-        t: number;
-        p: string;
-        q: string;
-        T: string;
-    }
-
-}
+import { Trade } from "./types"
 
 const app = express()
 app.use(cors())
@@ -143,7 +130,7 @@ async function setRedis() {
         }
       }
 
-      console.log(`✅ emitted trade to ${room}`, trade);
+      console.log(`emitted trade to ${room}`, trade);
     } catch (err) {
       console.error("Error parsing Redis msg:", err);
     }
@@ -152,7 +139,19 @@ async function setRedis() {
   
 }
 
+function procesTrades(trade: Trade) {
+  const symbol=trade.data.s
+ const _price=trade.data.p
+ const timestamp=trade.data.T
 
+ const price=parseInt(_price)
+
+
+
+
+
+
+}
 
 
 (async () => {

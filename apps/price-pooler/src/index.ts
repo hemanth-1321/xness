@@ -25,7 +25,8 @@ ws.on("message", async (msg) => {
       //publishes data 
       await publisher.publish("trade-channel", JSON.stringify(data))
       console.log('data published',data)
-
+    
+      
 
       // trades are queued to push into data base (timescale db)
       await publisher.rpush("trade-queue", JSON.stringify(data))

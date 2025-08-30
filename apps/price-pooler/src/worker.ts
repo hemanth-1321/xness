@@ -5,6 +5,9 @@
   const BATCH_SIZE = 1000;
   const PRICE_MULTIPLIER = 1e8;
   const VOLUME_MULTIPLIER = 1e6;
+
+  
+
   let flushTimeout: NodeJS.Timeout | null = null;
 
   let tradeBuffer: Trade[] = [];
@@ -34,7 +37,7 @@
       `
       try {
         await client.query(query, values)
-        console.log(`✅ Inserted ${tradeBuffer.length} trades in batch`);
+        console.log(`Inserted ${tradeBuffer.length} trades in batch`);
       } catch (error) {
         console.error("batch insert error",error)
       } finally {
@@ -84,12 +87,14 @@
     }
   }
 
+  
+ 
 
   (async () => {
     try {
       await client.connect();
       console.log("Connected to DB");
-      consumeTrade(); // Start consuming trades
+      consumeTrade(); 
     } catch (error) {
       console.error("DB connection error:", error);
       process.exit(1);

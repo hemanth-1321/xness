@@ -9,6 +9,25 @@ export interface TradingInstrument {
   volume?: number;
   ask?: number;
 }
+interface instrumentsData {
+  id: string;
+  symbol: string;
+  name: string;
+}
+
+export const instruments:instrumentsData[] = [
+  { id: "btcusdt", symbol: "BTCUSDT", name: "Bitcoin USDT" },
+  { id: "ethusdt", symbol: "ETHUSDT", name: "Ethereum USDT" },
+  { id: "solusdt", symbol: "SOLUSDT", name: "Solana USDT" },
+  { id: "xrpusdt", symbol: "XRPUSDT", name: "Ripple USDT" },
+  { id: "dogeusdt", symbol: "DOGEUSDT", name: "Dogecoin USDT" },
+  { id: "suiusdt", symbol: "SUIUSDT", name: "SUI USDT" },
+];
+
+
+
+
+
 
 export interface CandlestickData {
   bucket: string;
@@ -32,80 +51,6 @@ export interface Position {
   swapU: number;
 }
 
-export const mockInstruments: TradingInstrument[] = [
-  {
-    id: 'btcusdt',
-    symbol: 'BTCUSDT',
-    name: 'Bitcoin USDT',
-    price: 112790.56,
-    change: -44.8,
-    changePercent: -0.04,
-    signal: 'sell'
-  },
-  {
-    id: 'ethusdt',
-    symbol: 'ETHUSDT',
-    name: 'Ethereum USDT',
-    price: 4557.35,
-    change: -3.77,
-    changePercent: -0.08,
-    signal: 'sell'
-  },
-  {
-    id: 'solusdt',
-    symbol: 'SOLUSDT',
-    name: 'Solana USDT',
-    price: 211.59,
-    change: -0.25,
-    changePercent: -0.12,
-    signal: 'sell'
-  },
-  {
-    id: 'xauusd',
-    symbol: 'XAU/USD',
-    name: 'Gold vs US Dollar',
-    price: 3400.79,
-    change: -0.14,
-    changePercent: -0.004,
-    signal: 'buy'
-  },
-  {
-    id: 'eurusd',
-    symbol: 'EUR/USD',
-    name: 'Euro vs US Dollar',
-    price: 1.16149,
-    change: 0.0023,
-    changePercent: 0.20,
-    signal: 'buy'
-  },
-  {
-    id: 'gbpusd',
-    symbol: 'GBP/USD',
-    name: 'British Pound vs US Dollar',
-    price: 1.35082,
-    change: -0.0045,
-    changePercent: -0.33,
-    signal: 'sell'
-  },
-  {
-    id: 'usdjpy',
-    symbol: 'USD/JPY',
-    name: 'US Dollar vs Japanese Yen',
-    price: 147.143,
-    change: -1.25,
-    changePercent: -0.84,
-    signal: 'sell'
-  },
-  {
-    id: 'usoil',
-    symbol: 'USOIL',
-    name: 'US Oil',
-    price: 63.527,
-    change: -2.14,
-    changePercent: -3.26,
-    signal: 'sell'
-  }
-];
 
 // Real candlestick data from your API
 export const realCandlestickData: CandlestickData[] = [

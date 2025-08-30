@@ -3,7 +3,6 @@
   import { Trade } from "./types";
 
   const BATCH_SIZE = 1000;
-  const BATCH_DELAY = 3000;
   const PRICE_MULTIPLIER = 1e8;
   const VOLUME_MULTIPLIER = 1e6;
   let flushTimeout: NodeJS.Timeout | null = null;

@@ -23,7 +23,7 @@ ws.on("message", async (msg) => {
 
     if (data.stream && data.data) {
       //publishes data 
-      await publisher.publish("live-trades", JSON.stringify(data))
+      await publisher.publish("trade-channel", JSON.stringify(data))
       console.log('data published',data)
 
 

@@ -78,7 +78,8 @@ export default function TradingChart() {
 
     loadCandles();
 
-    const onResize = () => chart.applyOptions({ width: ref.current!.clientWidth });
+    const onResize = () =>
+      chart.applyOptions({ width: ref.current!.clientWidth });
     window.addEventListener("resize", onResize);
 
     return () => {
@@ -88,11 +89,12 @@ export default function TradingChart() {
   }, [symbol, timeframe]);
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-4">
+    <div className="space-y-2 relative">
+      {/* Controls row */}
+      <div className="flex items-center gap-4 relative z-10">
         {/* Symbol selector */}
         <select
-          className="border px-2 py-1 rounded bg-black text-white"
+          className="relative z-10 border px-2 py-1 rounded bg-black text-white"
           value={symbol}
           onChange={(e) => setSymbol(e.target.value)}
         >
@@ -105,7 +107,7 @@ export default function TradingChart() {
 
         {/* Timeframe selector */}
         <select
-          className="border px-2 py-1 rounded bg-black text-white"
+          className="relative z-10 border px-2 py-1 rounded bg-black text-white"
           value={timeframe}
           onChange={(e) => setTimeframe(e.target.value)}
         >
@@ -118,7 +120,11 @@ export default function TradingChart() {
       </div>
 
       {/* Chart container */}
-      <div ref={ref} style={{ width: "100%", height: 400 }} />
+      <div
+        ref={ref}
+        className="relative z-0"
+        style={{ width: "100%", height: 400 }}
+      />
     </div>
   );
 }

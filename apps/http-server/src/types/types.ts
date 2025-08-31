@@ -12,6 +12,8 @@ export interface Trade {
 }
 
 
+
+
 export interface Order{
     userId:string,
     orderId:string,
@@ -21,7 +23,10 @@ export interface Order{
     leverage?:number,
     exposure?:number   //total exposure = quantity * openingPrice * leverage
     createdAt:Date
+    type: "BUY" | "SELL" 
 }
+
+
 
 
 export interface User {

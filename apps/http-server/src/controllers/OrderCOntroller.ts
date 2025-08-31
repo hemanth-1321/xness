@@ -18,7 +18,7 @@ export const BuyOrder = ({ order }: { order: Order }) => {
         const margin = exposure / leverage
 
         console.log("User balance:", user.balance);
-        console.log("Exposure:", exposure, "Margin req  uired:", margin);
+        console.log("Exposure:", exposure, "Margin required:", margin);
 
 
         if (user.balance < margin) {
@@ -33,4 +33,4 @@ export const BuyOrder = ({ order }: { order: Order }) => {
         console.error("errorr creating order", error)
         throw new Error("error creating order")
     }
-}
+}   

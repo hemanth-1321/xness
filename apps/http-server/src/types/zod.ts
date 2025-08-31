@@ -5,10 +5,11 @@ export const userSchema=z.object({
     password:z.string()
 })
 
+
 export const OrderSchema=z.object({
     asset:z.string(),
     quantity:z.number(),
     openingPrice:z.number(),
     leverage:z.number().optional(),
-    exposure:z.number().optional()   
+    exposure:z.number().optional(),   
 })

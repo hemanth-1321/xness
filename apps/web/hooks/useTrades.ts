@@ -1,27 +1,14 @@
-"use client";
-import { useEffect, useState } from "react";
+"use client"
+import { useEffect } from "react";
 import ws from "@/lib/ws";
-import { instruments, TradingInstrument } from "@/data/mockTradingData";
+import { useTrades } from "@/store/tradeStore";
+import { instruments } from "@/data/mockTradingData";
 
-export const useTrades = () => {
-  const [prices, setPrices] = useState<Record<string, TradingInstrument>>(
-    () =>
-      instruments.reduce((acc, inst) => {
-        acc[inst.symbol] = {
-          ...inst,
-          price: 0,
-          change: 0,
-          changePercent: 0,
-          signal: "neutral",
-          volume: 0,
-          ask: undefined,
-        };
-        return acc;
-      }, {} as Record<string, TradingInstrument>)
-  );
+export const useTrade = () => {
+  const setPrice = useTrades((state) => state.setPrice);
 
   useEffect(() => {
-    // subscribe to all instruments
+    // Subscribe to all instruments
     instruments.forEach((instrument) => {
       ws.send(JSON.stringify({ type: "subscribe-trades", symbol: instrument.symbol }));
     });
@@ -32,31 +19,13 @@ export const useTrades = () => {
 
         if (msg.type === "live-trades") {
           const trade = msg.data;
-          const symbol = trade?.s; // "BTCUSDT"
-          const price = parseFloat(trade?.p);
+          const symbol = trade?.s;
+          const price = trade?.p ? parseFloat(trade.p) : undefined;
           const ask = trade?.ask ? parseFloat(trade.ask) : undefined;
-          const volume = trade?.q ? parseFloat(trade.q) : 0;
+          const volume = trade?.q ? parseFloat(trade.q) : undefined;
 
-          if (symbol && price) {
-            setPrices((prev) => {
-              const prevPrice = prev[symbol]?.price ?? price;
-              const change = price - prevPrice;
-              const changePercent = prevPrice ? (change / prevPrice) * 100 : 0;
-
-              return {
-                ...prev,
-                [symbol]: {
-                  ...prev[symbol],
-                  price,
-                  ask,
-                  volume,
-                  change,
-                  changePercent,
-                  signal:
-                    change > 0 ? "buy" : change < 0 ? "sell" : "neutral",
-                },
-              };
-            });
+          if (symbol && price !== undefined) {
+            setPrice(symbol, { price, ask, volume });
           }
         }
       } catch (err) {
@@ -68,7 +37,5 @@ export const useTrades = () => {
     return () => {
       ws.removeEventListener("message", handleMessage);
     };
-  }, []);
-
-  return prices;
+  }, [setPrice]);
 };

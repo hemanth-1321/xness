@@ -1,15 +1,17 @@
 "use client";
-import { useTrades } from "@/hooks/useTrades";
+import { useTrade } from "@/hooks/useTrades";
+import { useTrades } from "@/store/tradeStore";
 
 export const InstrumentSidebar = () => {
-  const prices = useTrades();
+  useTrade(); // initializes WS subscription
+  const prices = useTrades((state) => state.prices);
 
   return (
     <div className="w-64 bg-card border-r border-trading-border h-full flex flex-col">
       <div className="p-4 border-b border-trading-border">
         <h2 className="text-sm font-medium text-trading-text-primary mb-3">
           INSTRUMENTS
-        </h2>
+        </h2>    
       </div>
 
       <div className="flex-1 overflow-y-auto">

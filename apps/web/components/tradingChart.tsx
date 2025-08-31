@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { io, type Socket } from "socket.io-client";
+
+import { useEffect, useRef } from "react";
 import {
   CandlestickSeries,
   createChart,
@@ -8,8 +8,8 @@ import {
   type IChartApi,
   type Time,
 } from "lightweight-charts";
+import { useTradingStore } from "@/store/useTradingStore";
 
-const SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "SUIUSDT"];
 const TIMEFRAMES = ["1m", "5m", "10m", "30m", "1h", "1d"] as const;
 type TF = (typeof TIMEFRAMES)[number];
 
@@ -23,15 +23,11 @@ const TIMEFRAME_LABELS: Record<TF, string> = {
 };
 
 export default function TradingChart() {
-  const [symbol, setSymbol] = useState<string>(SYMBOLS[0] as string);
-  const [timeframe, setTimeframe] = useState<TF>("1m");
-
+  const { symbol, timeframe, setSymbol, setTimeframe } = useTradingStore();
   const ref = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<any | null>(null);
-  const socketRef = useRef<Socket | null>(null);
 
-  // Initialize chart and socket
   useEffect(() => {
     if (!ref.current) return;
 
@@ -55,10 +51,6 @@ export default function TradingChart() {
       wickDownColor: "#ef5350",
     });
     seriesRef.current = series;
-
-    // --- Socket.IO ---
-    const socket = io("http://localhost:8080");
-    socketRef.current = socket;
 
     const loadCandles = async () => {
       try {
@@ -86,31 +78,12 @@ export default function TradingChart() {
 
     loadCandles();
 
-    // Subscribe to live trades
-    socket.emit("subscribe-trades", { symbol });
-    socket.on("live-trade", (trade) => {
-      const price = parseFloat(trade.data.p);
-
-      if (seriesRef.current?.__lastTradeLine) {
-        seriesRef.current.removePriceLine(seriesRef.current.__lastTradeLine);
-      }
-      seriesRef.current.__lastTradeLine = seriesRef.current.createPriceLine({
-        price,
-        color: trade.data.m ? "red" : "green",
-        lineWidth: 1,
-        lineStyle: 0,
-        axisLabelVisible: false,
-        title: "Trade",
-      });
-    });
-
     const onResize = () => chart.applyOptions({ width: ref.current!.clientWidth });
     window.addEventListener("resize", onResize);
 
     return () => {
       window.removeEventListener("resize", onResize);
       chart.remove();
-      socket.disconnect();
     };
   }, [symbol, timeframe]);
 
@@ -123,7 +96,7 @@ export default function TradingChart() {
           value={symbol}
           onChange={(e) => setSymbol(e.target.value)}
         >
-          {SYMBOLS.map((s) => (
+          {["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","SUIUSDT"].map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
@@ -134,7 +107,7 @@ export default function TradingChart() {
         <select
           className="border px-2 py-1 rounded bg-black text-white"
           value={timeframe}
-          onChange={(e) => setTimeframe(e.target.value as TF)}
+          onChange={(e) => setTimeframe(e.target.value)}
         >
           {TIMEFRAMES.map((tf) => (
             <option key={tf} value={tf}>

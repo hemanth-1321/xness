@@ -1,12 +1,12 @@
 "use client";
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { ChevronDown, Settings, Grid3x3, Clock, Search, Bell, User } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
 import { mockAccountInfo } from '@/data/mockTradingData';
-
+import { useUserStore } from "@/store/userStore";
 export const TradingHeader = () => {
   const [selectedAccount, setSelectedAccount] = useState('Demo');
-
+  const { logout } = useUserStore();
   return (
     <header className="bg-card border-b border-trading-border px-4 py-3">
       <div className="flex items-center justify-between">
@@ -78,8 +78,8 @@ export const TradingHeader = () => {
               <Bell className="h-4 w-4" />
             </Button>
 
-            <Button className="bg-trading-info hover:bg-trading-info/90 text-white px-4">
-              Deposit
+            <Button  onClick={logout} className="bg-trading-info hover:bg-trading-info/90 text-white px-4 cursor-pointer">
+              Logout
             </Button>
           </div>
         </div>

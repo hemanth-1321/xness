@@ -12,6 +12,24 @@ export interface Trade {
 }
 
 
+export interface Order{
+    userId:string,
+    orderId:string,
+    asset:string,
+    quantity:number,
+    openingPrice:number,
+    leverage?:number,
+    exposure?:number   //total exposure = quantity * openingPrice * leverage
+    createdAt:Date
+}
+
+
+export interface User {
+    id: string,
+    email: string,
+    hashedPassword: string,
+    balance:number
+}   
 
 export interface Candle{
     open:number;

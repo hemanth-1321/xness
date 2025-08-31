@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken"
 const JWT_SECRET = process.env.JWT_SECRET || "secret"
 
+
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
 
     const authHeader = req.headers.authorization;
@@ -13,7 +14,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     }
 
 
-    const token = authHeader?.split("")[1]
+    const token = authHeader?.split(" ")[1]
     if (!token) {
         res.status(401).json({ error: "Invalid token format" });
 
@@ -21,16 +22,17 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
         return
     }
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { email: string }
-        (req as any).user = decoded
+        const decoded = jwt.verify(token, JWT_SECRET) as { id: string }
+        req.userId=decoded.id
 
         next()
 
 
     } catch (error) {
         {
-            res.status(401).json({ error: "Invalid or expired token" });
 
+            res.status(401).json({ error: "Invalid or expired token" });
+            console.log("error",error)
             return
         }
     }

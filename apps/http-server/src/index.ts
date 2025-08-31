@@ -6,6 +6,7 @@ import WebSocket,{WebSocketServer} from "ws"
 import{subscriber}from '@repo/redis/redis-client'
 import { Trade } from "./types/types"
 import userAuthRoutes from "./routes/UserRoute"
+import orderRoutes from "./routes/OrderRoutes"
 const app = express()
 app.use(cors())
 app.use(express.json())
@@ -51,6 +52,8 @@ app.get("/candles/:timeframe", async (req, res) => {
 })
 
 app.use("/api/v1/user",userAuthRoutes)
+app.use("/api/v1/buy",orderRoutes)
+
 /**
  * Websocket handling
  */

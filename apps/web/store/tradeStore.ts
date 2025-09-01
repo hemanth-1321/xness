@@ -1,4 +1,4 @@
-// store/useTradingStore.ts
+// store/tradeStore.ts
 import { create } from "zustand";
 import { instruments, TradingInstrument } from "@/data/mockTradingData";
 
@@ -20,15 +20,14 @@ export const useTrades = create<TradingStore>((set) => ({
     };
     return acc;
   }, {} as Record<string, TradingInstrument>),
-  
+
   setPrice: (symbol, data) =>
-    set((state:any) => {
+    set((state: any) => {
       const prevPrice = state.prices[symbol]?.price ?? 0;
       const newPrice = data.price ?? prevPrice;
       const change = newPrice - prevPrice;
       const changePercent = prevPrice ? (change / prevPrice) * 100 : 0;
-      const signal =
-        change > 0 ? "buy" : change < 0 ? "sell" : "neutral";
+      const signal = change > 0 ? "buy" : change < 0 ? "sell" : "neutral";
 
       return {
         prices: {

@@ -2,7 +2,7 @@
 import { AuthForm } from '@/components/Auth'
 import { InstrumentSidebar } from '@/components/instrumentSideBar'
 import { OrderPanel } from '@/components/OrderPannel'
-import { PositionsTable } from '@/components/positionsTable'
+import { OpenOrdersTable } from '@/components/openOrdersTable'
 import TradingChart from '@/components/tradingChart'
 import { TradingHeader } from '@/components/tradingHeader'
 import { useUserStore } from '@/store/userStore'
@@ -44,7 +44,7 @@ const Page = () => {
           </div>
 
           <div className="p-4 border-t border-trading-border">
-            <PositionsTable />
+            <OpenOrdersTable />
           </div>
         </div>
       </div>

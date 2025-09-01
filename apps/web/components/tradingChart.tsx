@@ -94,12 +94,12 @@ export default function TradingChart() {
       <div className="flex items-center gap-4 relative z-10">
         {/* Symbol selector */}
         <select
-          className="relative z-10 border px-2 py-1 rounded bg-black text-white"
+          className="relative z-10 border px-2 py-1 rounded bg-black cursor-pointer"
           value={symbol}
           onChange={(e) => setSymbol(e.target.value)}
         >
           {["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","SUIUSDT"].map((s) => (
-            <option key={s} value={s}>
+            <option key={s} value={s} className="cursor-pointer">
               {s}
             </option>
           ))}
@@ -107,7 +107,7 @@ export default function TradingChart() {
 
         {/* Timeframe selector */}
         <select
-          className="relative z-10 border px-2 py-1 rounded bg-black text-white"
+          className="relative z-10 border px-2 py-1 rounded bg-black cursor-pointer"
           value={timeframe}
           onChange={(e) => setTimeframe(e.target.value)}
         >

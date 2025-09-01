@@ -1,14 +1,18 @@
 import { Order } from "../types/types";
 import { orders } from "../store/ordermap";
-import { getUserById, updateUser } from "../store/usermap";
+import { prisma } from "@repo/primary-db/prisma";
 
-export const BuyOrder = ({ order }: { order: Order }) => {
+export const createOrder = async({ order }: { order: Order }) => {
   try {
     const { orderId, userId, asset, openingPrice, quantity, leverage = 1, userAmount } = order;
 
     console.log("Order details:", orderId, userId, asset, openingPrice, quantity, leverage, userAmount);
 
-    const user = getUserById(userId);
+    const user =await prisma.user.findUnique({
+      where:{
+        id:userId
+      }
+    });
     if (!user) {
       console.log("User not found");
       throw new Error("User not found");
@@ -30,11 +34,24 @@ export const BuyOrder = ({ order }: { order: Order }) => {
       throw new Error("Insufficient balance");
     }
     user.balance -= userAmount;
+    //upadates user balance
+    await prisma.user.update({
+      where:{
+        id:user.id,
+      },
+      data:{
+        balance:user.balance
+      }
+    })
 
-    updateUser(user);
-    orders.set(orderId, order);
+    const defaultStopLoss=order.type=="BUY"?openingPrice*0.98:openingPrice*1.02;
+
+   order.stopLoss=defaultStopLoss
+
+    orders.set(orderId,order );
 
     console.log("Order created successfully. Updated balance:", user.balance);
+    console.log("Order created successfully. Updated balance:", order.stopLoss);
 
   } catch (error) {
     console.error("Error creating order:", error);
@@ -42,6 +59,9 @@ export const BuyOrder = ({ order }: { order: Order }) => {
   }
 };
 
+// export const checkOrders({symbol,price}:{symbol:string,price:string})=>{
+
+// }
 
 export const CloseOrder=({orderId,userId,closingPrice}:{orderId:string,userId:string,closingPrice:number})=>{
 

@@ -24,6 +24,7 @@ export interface Order{
     exposure?:number   //total exposure = quantity * openingPrice * leverage
     createdAt:Date,
     userAmount?:number,
+    stopLoss?:number,
     type: "BUY" | "SELL" 
 }
 

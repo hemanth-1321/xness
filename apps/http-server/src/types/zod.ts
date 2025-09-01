@@ -13,5 +13,5 @@ export const OrderSchema=z.object({
     userAmount:z.number().optional(),
     leverage:z.number().optional(),
     exposure:z.number().optional(),   
-
+    type: z.enum(["BUY", "SELL"]),
 })

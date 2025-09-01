@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import express, { Router } from "express"
 import { authMiddleware } from "../middleware/middlware"
 import { OrderSchema } from "../types/zod"
-import { BuyOrder } from "../controllers/OrderCOntroller"
+import { createOrder } from "../controllers/OrderCOntroller"
 import { Order } from "../types/types";
 import { getUserById } from "../store/usermap";
 import { getOrdersByUserId } from "../store/ordermap";
@@ -26,7 +26,7 @@ router.post("/trade", authMiddleware, (req, res) => {
         })
         return
     }
-    const { asset, quantity, openingPrice, leverage,userAmount } = parsedData.data
+    const { asset, quantity, openingPrice, leverage,userAmount,type } = parsedData.data
     const order: Order = {
         orderId: uuidv4(),
         userId,
@@ -36,10 +36,10 @@ router.post("/trade", authMiddleware, (req, res) => {
         leverage,
         userAmount,
         createdAt: new Date(),
-        type: "BUY"
+        type:type
     }
     try {
-        BuyOrder({ order });
+        createOrder({ order });
         res.status(200).json({ message: "Order placed successfully", order });
     } catch (error) {
         console.error(error);

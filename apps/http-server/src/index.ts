@@ -134,7 +134,7 @@ async function setRedis() {
           }
         }
       }
-
+      
       console.log(`emitted trade to ${room}`, trade);
     } catch (err) {
       console.error("Error parsing Redis msg:", err);
@@ -142,21 +142,9 @@ async function setRedis() {
   });
 
   
+
 }
 
-// function procesTrades(trade: Trade) {
-//   const symbol=trade.data.s
-//  const _price=trade.data.p
-//  const timestamp=trade.data.T
-
-//  const price=parseInt(_price)
-
-
-
-
-
-
-// }
 
 
 (async () => {

@@ -26,7 +26,7 @@ router.post("/trade", authMiddleware, (req, res) => {
         })
         return
     }
-    const { asset, quantity, openingPrice, leverage } = parsedData.data
+    const { asset, quantity, openingPrice, leverage,userAmount } = parsedData.data
     const order: Order = {
         orderId: uuidv4(),
         userId,
@@ -34,6 +34,7 @@ router.post("/trade", authMiddleware, (req, res) => {
         quantity,
         openingPrice,
         leverage,
+        userAmount,
         createdAt: new Date(),
         type: "BUY"
     }
@@ -62,11 +63,13 @@ router.get("/open-orders", authMiddleware, (req, res) => {
         throw new Error("User not found")
     }
 
+    const userBalance=user.balance
 
     try {
         const openOrders = getOrdersByUserId(userId)
         res.status(200).json({
-            openOrders
+            ...openOrders,
+            userBalance
         })
 
     } catch (error) {
@@ -75,6 +78,22 @@ router.get("/open-orders", authMiddleware, (req, res) => {
 
     }
 
+
+
+})
+
+//todo
+router.post("/close-order/:orderId",authMiddleware,(req,res)=>{
+    const userId=req.userId
+      if (!userId) {
+        res.status(403).json({
+            message: "user not found"
+        })
+        return
+    }
+
+
+    
 
 
 })

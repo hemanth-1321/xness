@@ -30,12 +30,17 @@ export const useOpenOrders = create<OrderStore>((set, get) => {
     fetchOpenOrders: async () => {
       try {
         const res = await axios.get(`${BACKEND_URL}/buy/open-orders`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
+
         const data = res.data;
-        set({ openOrders: data.openOrders || [] });
+
+        // Convert numeric keys to array
+        const ordersArray: Order[] = Object.keys(data)
+          .filter((key) => !isNaN(Number(key)))
+          .map((key) => data[key]);
+
+        set({ openOrders: ordersArray });
       } catch (err) {
         console.error("Failed to fetch open orders", err);
       }

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
@@ -9,7 +9,6 @@ import { useTradingStore } from "@/store/useTradingStore";
 import { useTrades } from "@/store/tradeStore";
 import { toast } from "sonner";
 import { useUserStore } from "@/store/userStore";
-import { useOrderStore } from "@/store/useOrderStore";
 import { BACKEND_URL } from "@/lib/config";
 import axios from "axios";
 import { useOpenOrders } from "@/store/useOpenOrders";
@@ -34,7 +33,8 @@ const formatPrice = (price?: number, symbol?: string) => {
 
 export const OrderPanel = () => {
   const [orderType, setOrderType] = useState<"market" | "pending">("market");
-  const [volume, setVolume] = useState("0.01");
+  const [volume, setVolume] = useState("0.01"); // lots
+  const [amount, setAmount] = useState(20); // USD
   const [leverage, setLeverage] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<"buy" | "sell" | null>(null);
@@ -42,54 +42,79 @@ export const OrderPanel = () => {
   const { token } = useUserStore();
   const { prices } = useTrades();
   const { symbol } = useTradingStore();
-  const{fetchOpenOrders}=useOpenOrders()
+  const { fetchOpenOrders } = useOpenOrders();
+
   const current = (symbol && prices?.[symbol]) || undefined;
   const buyPrice = current?.ask ?? current?.price ?? undefined;
   const sellPrice = current?.price ?? current?.price ?? undefined;
 
-const handleOpenOrder = async () => {
+  // Effective leveraged position
+  const effectivePosition = Number(amount) * leverage;
 
-  if (!symbol) {
-    toast.error("Missing symbol or price");
-    return;
-  }
-
-  setLoading(true);
-
-  const orderData = {
-    asset: symbol,
-    quantity: Number(volume),
-    openingPrice: buyPrice,
-    leverage,
-  };
-
-  try {
-    console.log("Sending buy order:", `${BACKEND_URL}/buy/trade`, orderData);
-
-    const res = await axios.post(`${BACKEND_URL}/buy/trade`, orderData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (res.status === 200) {
-      toast("Buy order placed successfully");
-      await fetchOpenOrders()
-    }
-  } catch (error: any) {
-    console.error("Error creating buy order:", error.response ?? error.message);
-    toast.error(error.response?.data?.message || "Failed to place buy order");
-  } finally {
-    setLoading(false);
+const handleVolumeChange = (vol: string) => {
+  setVolume(vol);
+  if (buyPrice) {
+    const numericVol = Number(vol) || 0;
+    const computedAmount = numericVol * buyPrice; // number
+    setAmount(computedAmount);
   }
 };
 
+
+  // When amount changes, optionally update volume
+ const handleAmountChange = (val: string) => {
+  const numericVal = Number(val) || 0; // convert string to number safely
+  setAmount(numericVal);
+  
+  // optionally update volume based on price
+  if (buyPrice && numericVal > 0) {
+    setVolume((numericVal / buyPrice).toFixed(6)); // keep volume as string if your input needs it
+  }
+};
+  
+
+  const handleOpenOrder = async () => {
+    if (!symbol) {
+      toast.error("Missing symbol or price");
+      return;
+    }
+
+    setLoading(true);
+
+    const orderData = {
+      asset: symbol,
+      quantity: Number(amount), // user's base amount in USD
+      openingPrice: buyPrice,
+      leverage,
+      userAmount:amount
+    };
+
+    try {
+      console.log("Sending buy order:", `${BACKEND_URL}/buy/trade`, orderData);
+
+      const res = await axios.post(`${BACKEND_URL}/buy/trade`, orderData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.status === 200) {
+        toast("Buy order placed successfully");
+        await fetchOpenOrders();
+      }
+    } catch (error: any) {
+      console.error("Error creating buy order:", error.response ?? error.message);
+      toast.error(error.response?.data?.message || "Failed to place buy order");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="w-80 bg-card border-l border-trading-border p-4 flex flex-col mr-10">
       {/* Symbol Header */}
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-trading-text-primary mb-2">{symbol ?? "—"}</h3>
+        <h3 className="text-lg font-semibold text-trading-text-primary mb-2">
+          {symbol ?? "—"}
+        </h3>
 
         <div className="flex items-center gap-2 p-4 rounded-xl text-white w-fit">
           {/* Sell box */}
@@ -127,32 +152,58 @@ const handleOpenOrder = async () => {
       {/* Order type tabs */}
       <Tabs value={orderType} onValueChange={(value) => setOrderType(value as any)} className="mb-4">
         <TabsList className="grid w-full grid-cols-2 bg-trading-bg-tertiary">
-          <TabsTrigger value="market" className="data-[state=active]:bg-trading-info">Market</TabsTrigger>
-          <TabsTrigger value="pending" className="data-[state=active]:bg-trading-info">Pending</TabsTrigger>
+          <TabsTrigger value="market" className="data-[state=active]:bg-trading-info">
+            Market
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="data-[state=active]:bg-trading-info">
+            Pending
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
-      {/* Volume + Leverage */}
+      {/* Volume + Amount + Leverage */}
       <div className="space-y-4 flex-1">
+        {/* Volume input */}
         <div className="space-y-2">
-          <Label htmlFor="volume" className="text-sm text-trading-text-secondary">Volume</Label>
+          <Label htmlFor="volume" className="text-sm text-trading-text-secondary">
+            Volume (lots)
+          </Label>
           <div className="flex items-center gap-2">
             <Input
               id="volume"
               value={volume}
-              onChange={(e) => setVolume(e.target.value)}
+              onChange={(e) => handleVolumeChange(e.target.value)}
               className="bg-trading-bg-tertiary border-trading-border text-trading-text-primary"
             />
-            <span className="text-sm text-trading-text-muted">Lots</span>
+            <span className="text-sm text-trading-text-muted">{symbol}</span>
           </div>
         </div>
 
+        {/* Amount input */}
+        <div className="space-y-2">
+          <Label htmlFor="amount" className="text-sm text-trading-text-secondary">
+            Amount to invest (USD)
+          </Label>
+          <Input
+            id="amount"
+            value={amount}
+            onChange={(e) => handleAmountChange(e.target.value)}
+            className="bg-trading-bg-tertiary border-trading-border text-trading-text-primary"
+          />
+        </div>
+
+        {/* Effective position */}
+        <p className="text-xs text-trading-text-muted mt-1">
+          Effective position: {effectivePosition.toFixed(2)} USD
+        </p>
+
+        {/* Leverage slider */}
         <div className="space-y-2">
           <Label htmlFor="leverage" className="text-sm text-trading-text-secondary">
             Leverage ({leverage}x)
           </Label>
           <Slider
-            value={[LEVERAGE_OPTIONS.indexOf(leverage) >= 0 ? LEVERAGE_OPTIONS.indexOf(leverage) : 0]}
+            value={[LEVERAGE_OPTIONS.indexOf(leverage)]}
             min={0}
             max={LEVERAGE_OPTIONS.length - 1}
             step={1}
@@ -169,6 +220,7 @@ const handleOpenOrder = async () => {
           </div>
         </div>
 
+        {/* Confirm button */}
         <Button
           onClick={handleOpenOrder}
           className="w-full justify-center font-semibold py-3 text-white transition bg-blue-600 hover:bg-blue-700 cursor-pointer"

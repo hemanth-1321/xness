@@ -9,8 +9,6 @@ export const OpenOrdersTable = () => {
 
   useEffect(() => {
     fetchOpenOrders();
-    const interval = setInterval(fetchOpenOrders, 5000); // optional polling
-    return () => clearInterval(interval);
   }, []);
 
   return (

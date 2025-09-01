@@ -6,7 +6,7 @@ export const BuyOrder = ({ order }: { order: Order }) => {
         const { orderId, userId, asset, openingPrice, quantity, leverage = 1 } = order
         // console.log("quantity",quantity)
         console.log(orderId, userId, asset, openingPrice,leverage)
-        orders.set(orderId,order)
+        
 
         const user = getUserById(userId)
         if (!user) {
@@ -27,7 +27,7 @@ export const BuyOrder = ({ order }: { order: Order }) => {
         }
         user.balance = user.balance - margin
         updateUser(user)
-
+        orders.set(orderId,order)
 
     } catch (error) {
         console.error("errorr creating order", error)

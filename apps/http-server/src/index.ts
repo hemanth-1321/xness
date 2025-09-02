@@ -7,6 +7,7 @@ import{subscriber}from '@repo/redis/redis-client'
 import { Trade } from "./types/types"
 import userAuthRoutes from "./routes/UserRoute"
 import orderRoutes from "./routes/OrderRoutes"
+import { checkOpenOrders } from "./controllers/OrderCOntroller"
 const app = express()
 app.use(cors())
 app.use(express.json())
@@ -108,7 +109,7 @@ async function setRedis() {
     }
   });
   subscriber.on("message", (channel, message) => {
-    console.log("Received from Redis:", channel, message);
+    // console.log("Received from Redis:", channel, message);
 
     try {
       const data: Trade = JSON.parse(message);
@@ -134,8 +135,9 @@ async function setRedis() {
           }
         }
       }
+      checkOpenOrders({symbol, price});
       
-      console.log(`emitted trade to ${room}`, trade);
+      // console.log(`emitted trade to ${room}`, trade);
     } catch (err) {
       console.error("Error parsing Redis msg:", err);
     }

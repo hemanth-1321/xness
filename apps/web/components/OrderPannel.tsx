@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
@@ -33,8 +33,8 @@ const formatPrice = (price?: number, symbol?: string) => {
 
 export const OrderPanel = () => {
   const [orderType, setOrderType] = useState<"market" | "pending">("market");
-  const [volume, setVolume] = useState("0.01"); // lots
-  const [amount, setAmount] = useState(20); // USD
+  const [volume, setVolume] = useState("0.0"); // lots
+  const [amount, setAmount] = useState<number>(0);
   const [leverage, setLeverage] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<"buy" | "sell" | null>(null);
@@ -51,58 +51,65 @@ export const OrderPanel = () => {
   // Effective leveraged position
   const effectivePosition = Number(amount) * leverage;
 
-const handleVolumeChange = (vol: string) => {
-  setVolume(vol);
-  if (buyPrice) {
-    const numericVol = Number(vol) || 0;
-    const computedAmount = numericVol * buyPrice; // number
-    setAmount(computedAmount);
-  }
-};
+  const handleVolumeChange = (vol: string) => {
+    setVolume(vol);
+    if (buyPrice) {
+      const numericVol = Number(vol) || 0;
+      const computedAmount = numericVol * buyPrice; // convert to USD
+      setAmount(computedAmount);
+    }
+  };
 
+  const handleAmountChange = (val: string) => {
+    const numericVal = Number(val) || 0;
+    setAmount(numericVal);
 
-  // When amount changes, optionally update volume
- const handleAmountChange = (val: string) => {
-  const numericVal = Number(val) || 0; // convert string to number safely
-  setAmount(numericVal);
-  
-  // optionally update volume based on price
-  if (buyPrice && numericVal > 0) {
-    setVolume((numericVal / buyPrice).toFixed(6)); // keep volume as string if your input needs it
-  }
-};
-  
+    // Update volume from amount
+    if (buyPrice && numericVal > 0) {
+      setVolume((numericVal / buyPrice).toFixed(6));
+    }
+  };
 
   const handleOpenOrder = async () => {
     if (!symbol) {
       toast.error("Missing symbol or price");
       return;
     }
+    if (!selected) {
+      toast.error("Please select Buy or Sell");
+      return;
+    }
+    if (Number(amount) <= 0 || Number(volume) <= 0) {
+      toast.error("Amount and volume must be greater than 0");
+      return;
+    }
+
 
     setLoading(true);
 
     const orderData = {
       asset: symbol,
-      quantity: Number(amount), // user's base amount in USD
-      openingPrice: buyPrice,
+      type: selected.toUpperCase(), // "BUY" or "SELL"
+      quantity: Number(volume),       // lots
+      userAmount: Number(amount),       // USD
+      openingPrice: selected === "buy" ? buyPrice : sellPrice,
       leverage,
-      userAmount:amount
     };
 
     try {
-      console.log("Sending buy order:", `${BACKEND_URL}/buy/trade`, orderData);
+      console.log("Sending order:", `${BACKEND_URL}/trade`, orderData);
 
       const res = await axios.post(`${BACKEND_URL}/buy/trade`, orderData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.status === 200) {
-        toast("Buy order placed successfully");
+        toast.success(`${selected.toUpperCase()} order placed successfully`);
         await fetchOpenOrders();
       }
     } catch (error: any) {
-      console.error("Error creating buy order:", error.response ?? error.message);
-      toast.error(error.response?.data?.message || "Failed to place buy order");
+      console.error("Error creating order:", error.response ?? error.message);
+      toast.error(error.response?.data?.message || "Failed to place order");
     } finally {
       setLoading(false);
     }

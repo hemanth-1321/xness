@@ -2,14 +2,35 @@
 import { useEffect } from "react";
 import { useTrades } from "@/store/tradeStore";
 import { useOpenOrders } from "@/store/useOpenOrders";
-
+import axios from "axios";
+import { BACKEND_URL } from "@/lib/config";
+import { toast } from "sonner";
+import { useUserStore } from "@/store/userStore";
 export const OpenOrdersTable = () => {
   const { openOrders, fetchOpenOrders } = useOpenOrders();
   const prices = useTrades((state) => state.prices);
-
+ const{token}=useUserStore()
   useEffect(() => {
     fetchOpenOrders();
   }, []);
+
+  const handleCloseOrder = async (orderId: string, closingPrice: number) => {
+    try {
+     const res= await axios.post(`${BACKEND_URL}/buy/close-order/${orderId}`, {
+        closingPrice,
+      },{
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
+      });
+      if(res.status===200){
+        toast("order closed sucessfully")
+      }
+      fetchOpenOrders();
+    } catch (error) {
+      console.error("Error closing order:", error);
+    }
+  };
 
   return (
     <div className="p-4 border rounded-lg bg-card">
@@ -24,6 +45,7 @@ export const OpenOrdersTable = () => {
             <th>Current</th>
             <th>Leverage</th>
             <th>Unrealized PnL</th>
+            <th>close order</th>
           </tr>
         </thead>
         <tbody>
@@ -47,6 +69,16 @@ export const OpenOrdersTable = () => {
                 <td className={pnl >= 0 ? "text-green-500 font-semibold" : "text-red-500 font-semibold"}>
                   {pnl.toFixed(2)}
                 </td>
+                <td className="p-2 text-center">
+                  <button
+                    className="w-4 h-4 flex items-center justify-center rounded-full border border-gray-400 text-gray-300 hover:bg-gray-600 hover:text-white transition cursor-pointer"
+                    onClick={() => handleCloseOrder(order.orderId, Number(livePrice.toFixed(2)))}
+                  >
+                    ✕
+                  </button>
+                </td>
+
+
               </tr>
             );
           })}

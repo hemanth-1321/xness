@@ -10,15 +10,19 @@ import {
 } from "lightweight-charts";
 import { useTradingStore } from "@/store/useTradingStore";
 
-const TIMEFRAMES = ["1m", "5m", "10m", "30m", "1h", "1d"] as const;
+const KLINES_BASE =
+  process.env.NEXT_PUBLIC_BINANCE_KLINES_API_URL ||
+  "https://fapi.binance.com/fapi/v1/klines";
+
+const TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h", "1d"] as const;
 type TF = (typeof TIMEFRAMES)[number];
 
 const TIMEFRAME_LABELS: Record<TF, string> = {
   "1m": "1 min",
   "5m": "5 min",
-  "10m": "10 min",
-  "30m": "30 min",
+  "15m": "15 min",
   "1h": "1 hour",
+  "4h": "4 hours",
   "1d": "1 day",
 };
 
@@ -52,25 +56,30 @@ export default function TradingChart() {
     });
     seriesRef.current = series;
 
+    // --- Load history candles ---
     const loadCandles = async () => {
       try {
-        const res = await fetch(
-          `http://localhost:8080/candles/${timeframe}?symbol=${symbol}`,
-          { cache: "no-store" }
-        );
+        const params = new URLSearchParams();
+        params.set("symbol", symbol);
+        params.set("interval", timeframe);
+        params.set("limit", "500");
+
+        const url = `${KLINES_BASE}?${params.toString()}`;
+        const res = await fetch(url);
         if (!res.ok) throw new Error("Network response was not ok");
 
-        const json = await res.json();
-        const data: CandlestickData[] = json.map((c: any) => ({
-          time: Math.floor(new Date(c.bucket).getTime() / 1000) as Time,
-          open: Number(c.open),
-          high: Number(c.high),
-          low: Number(c.low),
-          close: Number(c.close),
+        const data = await res.json();
+
+        const candles: CandlestickData[] = data.map((d: any[]) => ({
+          time: Math.floor(d[0] / 1000) as Time,
+          open: Number(d[1]),
+          high: Number(d[2]),
+          low: Number(d[3]),
+          close: Number(d[4]),
         }));
 
-        seriesRef.current?.setData(data);
-        chartRef.current?.timeScale().fitContent();
+        series.setData(candles);
+        chart.timeScale().fitContent();
       } catch (err) {
         console.error("Error fetching candles:", err);
       }
@@ -78,11 +87,34 @@ export default function TradingChart() {
 
     loadCandles();
 
+    // --- WebSocket for live updates ---
+    const wsSymbol = symbol.toLowerCase();
+    const ws = new WebSocket(
+      `wss://fstream.binance.com/ws/${wsSymbol}@kline_${timeframe}`
+    );
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.e === "kline") {
+        const k = msg.k;
+        const candle: CandlestickData = {
+          time: Math.floor(k.t / 1000) as Time, // open time
+          open: Number(k.o),
+          high: Number(k.h),
+          low: Number(k.l),
+          close: Number(k.c),
+        };
+        series.update(candle);
+      }
+    };
+
+    // Resize handling
     const onResize = () =>
       chart.applyOptions({ width: ref.current!.clientWidth });
     window.addEventListener("resize", onResize);
 
     return () => {
+      ws.close();
       window.removeEventListener("resize", onResize);
       chart.remove();
     };
@@ -98,18 +130,20 @@ export default function TradingChart() {
           value={symbol}
           onChange={(e) => setSymbol(e.target.value)}
         >
-          {["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","SUIUSDT"].map((s) => (
-            <option key={s} value={s} className="cursor-pointer">
-              {s}
-            </option>
-          ))}
+          {["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "SUIUSDT"].map(
+            (s) => (
+              <option key={s} value={s} className="cursor-pointer">
+                {s}
+              </option>
+            )
+          )}
         </select>
 
         {/* Timeframe selector */}
         <select
           className="relative z-10 border px-2 py-1 rounded bg-black cursor-pointer"
           value={timeframe}
-          onChange={(e) => setTimeframe(e.target.value)}
+          onChange={(e) => setTimeframe(e.target.value as TF)}
         >
           {TIMEFRAMES.map((tf) => (
             <option key={tf} value={tf}>

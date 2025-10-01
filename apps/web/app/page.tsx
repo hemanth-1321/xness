@@ -6,20 +6,32 @@ import { OpenOrdersTable } from '@/components/openOrdersTable'
 import TradingChart from '@/components/tradingChart'
 import { TradingHeader } from '@/components/tradingHeader'
 import { useUserStore } from '@/store/userStore'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-
 
 const Page = () => {
   const token = useUserStore((state) => state.token);
-  const router=useRouter()
-   useEffect(() => {
+  const router = useRouter();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // ✅ detect mobile by screen width
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // treat <768px as mobile
+    };
+    checkMobile(); // run once
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // ✅ redirect to login if no token
+  useEffect(() => {
     if (!token) {
-      router.replace("/"); // or wherever your auth page is
+      router.replace("/");
     }
   }, [token, router]);
 
-  // while redirecting, optionally show nothing or a loader
+  // no token → show auth
   if (!token) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -28,7 +40,19 @@ const Page = () => {
     );
   }
 
-  // else show trading dashboard
+  // ✅ block mobile → show warning
+  if (isMobile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background text-center p-4">
+        <h1 className="text-xl font-semibold">
+          Please use this app on a desktop or larger device. <br />
+          Mobile devices are not supported.
+        </h1>
+      </div>
+    );
+  }
+
+  // ✅ desktop/laptop → show trading dashboard
   return (
     <div className="min-h-screen bg-background">
       <TradingHeader />

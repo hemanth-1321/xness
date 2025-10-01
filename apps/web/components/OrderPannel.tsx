@@ -156,17 +156,6 @@ export const OrderPanel = () => {
         </div>
       </div>
 
-      {/* Order type tabs */}
-      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as any)} className="mb-4">
-        <TabsList className="grid w-full grid-cols-2 bg-trading-bg-tertiary">
-          <TabsTrigger value="market" className="data-[state=active]:bg-trading-info">
-            Market
-          </TabsTrigger>
-          <TabsTrigger value="pending" className="data-[state=active]:bg-trading-info">
-            Pending
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
 
       {/* Volume + Amount + Leverage */}
       <div className="space-y-4 flex-1">

@@ -14,7 +14,6 @@ const Page = () => {
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
 
-  // ✅ detect mobile by screen width
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768); // treat <768px as mobile

@@ -1,1 +1,1 @@
-export const BACKEND_URL = "http://localhost:8080/api/v1";
+export const BACKEND_URL = "https://api.v1.hemanth.buzz/api/v1";

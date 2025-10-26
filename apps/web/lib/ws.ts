@@ -1,13 +1,13 @@
-// client.ts
-
-const ws = new WebSocket("ws://localhost:8080");
+const ws = new WebSocket("wss://api.v1.hemanth.buzz");
 
 ws.onopen = () => {
   console.log("Connected to server");
-  ws.send(JSON.stringify({
-    type: "subscribe-trades",
-    symbol: "XRPUSDT"
-  }));
+  ws.send(
+    JSON.stringify({
+      type: "subscribe-trades",
+      symbol: "XRPUSDT",
+    })
+  );
 };
 
 ws.onmessage = (event) => {

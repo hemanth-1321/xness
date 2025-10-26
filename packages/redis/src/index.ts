@@ -1,6 +1,6 @@
+// redis-client.ts
 import Redis from "ioredis";
 
-// Connection string
 const REDIS_URL = process.env.REDIS_URL;
 
 export const publisher = new Redis(REDIS_URL!);

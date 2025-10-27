@@ -42,7 +42,7 @@ export interface CandlestickData {
 export interface Position {
   id: string;
   symbol: string;
-  type: 'buy' | 'sell';
+  type: 'long' | 'short';
   volume: number;
   openPrice: number;
   currentPrice: number;
@@ -117,7 +117,7 @@ export const mockPositions: Position[] = [
   {
     id: 'pos1',
     symbol: 'BTCUSDT',
-    type: 'buy',
+    type: 'long',
     volume: 0.01,
     openPrice: 112835.36,
     currentPrice: 112790.56,

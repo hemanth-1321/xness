@@ -12,7 +12,7 @@ export interface Order {
   openingPrice: number;
   leverage: number;
   createdAt: string;
-  type: "BUY" | "SELL";
+  type: "LONG" | "SHORT";
 }
 
 interface OrderStore {

@@ -135,7 +135,7 @@ export const OrderPanel = () => {
                 : "border-red-500 bg-black text-red-400 hover:bg-red-600 hover:text-white"
               }`}
           >
-            <span className="text-sm font-medium">Sell</span>
+            <span className="text-sm font-medium">Short</span>
             <span className="text-lg font-bold">{formatPrice(sellPrice, symbol)}</span>
           </div>
 
@@ -150,7 +150,7 @@ export const OrderPanel = () => {
                 : "border-blue-500 bg-black text-blue-400 hover:bg-blue-600 hover:text-white"
               }`}
           >
-            <span className="text-sm font-medium">Buy</span>
+            <span className="text-sm font-medium">Long</span>
             <span className="text-lg font-bold">{formatPrice(buyPrice, symbol)}</span>
           </div>
         </div>

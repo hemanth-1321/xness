@@ -60,7 +60,7 @@ export const OpenOrdersTable = () => {
               <tr key={order.orderId} className="border-b border-trading-border/40">
                 <td>{order.asset}</td>
                 <td className={order.type === "BUY" ? "text-green-500 font-semibold" : "text-red-500 font-semibold"}>
-                  {order.type}
+                  {order.type === "BUY" ? "LONG" : "SHORT"}
                 </td>
                 <td>{order.quantity}</td>
                 <td>{order.openingPrice.toFixed(2)}</td>

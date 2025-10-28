@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { createServer } from "http";
 import WebSocket, { WebSocketServer } from "ws";
+import path from "path";
 import { subscriber } from "@repo/redis/redis-client";
 import { Trade } from "./types/types";
 import userAuthRoutes from "./routes/UserRoute";
@@ -11,6 +12,9 @@ import { checkOpenOrders } from "./controllers/OrderCOntroller";
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const publicPath = path.join(__dirname, "..", "public");
+app.use(express.static(publicPath));
 
 const PORT = 8080;
 
@@ -27,6 +31,13 @@ const timeFramemap: Record<string, string> = {
 };
 
 app.get("/health", (_, res) => res.send("hello world"));
+
+/**
+ * Serve landing page
+ */
+app.get("/", (_, res) => {
+  res.sendFile(path.join(publicPath, "index.html"));
+});
 
 /**
  * GET end point to get candles based on time frame

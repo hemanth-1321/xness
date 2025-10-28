@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HTTP Server</title>
+  <meta name="description" content="Simple landing page for the HTTP server. Check /health or view API docs." />
+  <style>
+    /* Minimal, inline styles */
+    :root{
+      --bg:#f7fafc;
+      --card:#ffffff;
+      --muted:#556;
+      --accent:#0b76ef;
+      --success:#16a34a;
+      --border:#e6eef8;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color-scheme: light;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:28px;
+      max-width:680px;
+      width:100%;
+      box-shadow:0 6px 18px rgba(20,30,60,0.06);
+    }
+    h1{margin:0 0 8px;font-size:1.4rem}
+    p{margin:0 0 16px;color:var(--muted);line-height:1.4}
+    .links{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    a.button{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:8px;
+      text-decoration:none;
+      background:transparent;
+      border:1px solid var(--border);
+      color:var(--accent);
+      font-weight:600;
+      font-size:0.95rem;
+    }
+    a.button:hover{background:rgba(11,118,239,0.06)}
+    button.check{
+      padding:8px 12px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      font-weight:600;
+      color:var(--muted);
+    }
+    .status{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:8px;
+      background:#fbfdff;
+      border:1px dashed var(--border);
+      color:var(--muted);
+      font-size:0.95rem;
+    }
+    .status.ok{color:var(--success); border-style:solid}
+    footer{margin-top:18px;font-size:0.85rem;color:var(--muted)}
+    @media (max-width:420px){ .card{padding:18px} }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <header>
+      <h1>HTTP Server</h1>
+      <p>Lightweight static landing page. Use the links below to check server health or view API documentation.</p>
+    </header>
+
+    <nav class="links" aria-label="quick links">
+      <a id="health-link" class="button" href="/health">Check /health</a>
+      <a class="button" href="/docs">API docs</a>
+    </nav>
+
+    <div>
+      <button id="check-btn" class="check" type="button">Run health probe</button>
+      <div id="status" class="status" aria-live="polite">Status: unknown</div>
+    </div>
+
+    <footer>© HTTP Server — simple status and docs links</footer>
+  </main>
+
+  <script type="module">
+    // Exported constant for JS projects that may import this module (keeps file compatible with module workflows)
+    export const APP = { name: 'http-server', description: 'Static landing page' };
+
+    const statusEl = document.getElementById('status');
+    const checkBtn = document.getElementById('check-btn');
+    const healthLink = document.getElementById('health-link');
+
+    async function checkHealth() {
+      statusEl.textContent = 'Checking…';
+      statusEl.classList.remove('ok');
+      try {
+        const res = await fetch('/health', { cache: 'no-store' });
+        const text = await res.text().catch(() => '');
+        const summary = `Status: ${res.status} ${res.statusText}${text ? ' — ' + text : ''}`;
+        statusEl.textContent = summary;
+        if (res.ok) statusEl.classList.add('ok'); else statusEl.classList.remove('ok');
+      } catch (err) {
+        statusEl.textContent = `Status: offline (${err.message})`;
+        statusEl.classList.remove('ok');
+      }
+    }
+
+    checkBtn.addEventListener('click', checkHealth);
+
+    // When user clicks the /health link, probe first then follow the link.
+    healthLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await checkHealth();
+      // navigate after a brief delay so users can see the result
+      setTimeout(() => { window.location.href = '/health'; }, 250);
+    });
+  </script>
+</body>
+</html>

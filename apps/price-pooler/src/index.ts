@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 import WebSocket from "ws";
-import { publisher } from "@repo/redis/redis-client";
+import {  redis } from "@repo/redis/redis-client";
+import { Queue } from 'bullmq';
 import { Trade } from "./types";
 
 const binanceWS = process.env.BINANCE_API_KEY!;
@@ -20,10 +21,11 @@ ws.on("message", async (msg) => {
     if (data.stream && data.data) {
       //publishes data
       await publisher.publish("trade-channel", JSON.stringify(data));
-      console.log("data published", data);
+      // console.log("data published", data);
 
       // trades are queued to push into data base (timescale db)
-      await publisher.rpush("trade-queue", JSON.stringify(data));
+      const tradeQueue = new Queue('trade-queue', { connection: redis });
+      await tradeQueue.add('trade', data);
 
       // console.log('data queued', data.data.p)
     }

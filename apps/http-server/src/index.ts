@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import { createServer } from "http";
 import WebSocket, { WebSocketServer } from "ws";
-import { subscriber } from "@repo/redis/redis-client";
+import { subscriber,redis } from "@repo/redis/redis-client";
 import { Trade } from "./types/types";
 import userAuthRoutes from "./routes/UserRoute";
 import orderRoutes from "./routes/OrderRoutes";

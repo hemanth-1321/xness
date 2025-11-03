@@ -20,4 +20,29 @@ model User{
   balance Int @default (5000)
 }
 
+model OpenOrders {
+  id           String   @id @default(uuid())
+  userId       String
+  orderId      String
+  asset        String
+  quantity     Float
+  openingPrice Float
+  leverage     Float?   @default(1)
+  exposure     Float?   //total exposure = quantity * openingPrice * leverage
+  createdAt    DateTime @default(now())
+  userAmount   Float?
+  stopLoss     Float?
+  type         String
+  User         User     @relation(fields: [userId], references: [id])
+
+  @@map("open_orders")
+}
+
+model User{
+  id  String @id @default(uuid())
+  email String @unique
+  password String
+  balance Int @default (5000)
+}
+
 

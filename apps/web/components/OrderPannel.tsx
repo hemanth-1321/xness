@@ -135,7 +135,7 @@ export const OrderPanel = () => {
                 : "border-red-500 bg-black text-red-400 hover:bg-red-600 hover:text-white"
               }`}
           >
-            <span className="text-sm font-medium">Sell</span>
+            <span className="text-sm font-medium">Short</span>
             <span className="text-lg font-bold">{formatPrice(sellPrice, symbol)}</span>
           </div>
 
@@ -150,23 +150,12 @@ export const OrderPanel = () => {
                 : "border-blue-500 bg-black text-blue-400 hover:bg-blue-600 hover:text-white"
               }`}
           >
-            <span className="text-sm font-medium">Buy</span>
+            <span className="text-sm font-medium">Long</span>
             <span className="text-lg font-bold">{formatPrice(buyPrice, symbol)}</span>
           </div>
         </div>
       </div>
 
-      {/* Order type tabs */}
-      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as any)} className="mb-4">
-        <TabsList className="grid w-full grid-cols-2 bg-trading-bg-tertiary">
-          <TabsTrigger value="market" className="data-[state=active]:bg-trading-info">
-            Market
-          </TabsTrigger>
-          <TabsTrigger value="pending" className="data-[state=active]:bg-trading-info">
-            Pending
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
 
       {/* Volume + Amount + Leverage */}
       <div className="space-y-4 flex-1">

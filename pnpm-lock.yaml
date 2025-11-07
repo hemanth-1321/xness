@@ -225,6 +225,9 @@ importers:
 
   packages/redis:
     dependencies:
+      dotenv:
+        specifier: ^17.2.1
+        version: 17.2.1
       ioredis:
         specifier: ^5.7.0
         version: 5.7.0

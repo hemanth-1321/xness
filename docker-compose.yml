@@ -1,19 +1,19 @@
-  version: "3.9"
+version: "3.9"
 
-  services:
-    timescaledb:
-      image: timescale/timescaledb-ha:pg17
-      container_name: timescale-db
-      environment:
-        POSTGRES_PASSWORD: password
-      ports:
-        - "5432:5432"
-      restart: always
+services:
+  redis:
+    image: redis:latest
+    container_name: redis-client
+    ports:
+      - "6379:6379"
+    restart: always
+    command: [ "redis-server", "--appendonly", "yes" ]
 
-    redis:
-      image: redis:latest
-      container_name: redis
-      ports:
-        - "6379:6379"
-      restart: always
-      command: ["redis-server", "--appendonly", "yes"]
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    restart: always

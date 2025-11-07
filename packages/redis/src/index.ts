@@ -1,13 +1,10 @@
 import Redis from "ioredis";
-export const publisher = new Redis({
-    host: "127.0.0.1",
-    port: 6379
-});
+
+// Connection string
+const REDIS_URL = process.env.REDIS_URL;
+
+export const publisher = new Redis(REDIS_URL!);
 publisher.on("connect", () => console.log("Publisher connected"));
 
-export const subscriber = new Redis(
-    {
-        host: "127.0.0.1",
-         port: 6379
-    });
+export const subscriber = new Redis(REDIS_URL!);
 subscriber.on("connect", () => console.log("Subscriber connected"));

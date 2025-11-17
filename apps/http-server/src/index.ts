@@ -147,8 +147,6 @@ async function setRedis() {
 
 }
 
-
-
 (async () => {
   try {
     await Client.connect()
@@ -160,3 +158,5 @@ async function setRedis() {
     process.exit(1)
   }
 })()
+
+app.use('/user', userAuthRoutes)
